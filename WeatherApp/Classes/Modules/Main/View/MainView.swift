@@ -151,7 +151,20 @@ struct MainView: View {
                         .transition(.opacity)
                     } else if let error = viewState.errorMessage {
                         Text(error)
-                            .foregroundColor(.red)
+                            .foregroundColor(.white)
+                            .font(.system(size: 16, weight: .medium))
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.red.opacity(0.7))
+                            )
+                            .padding()
+                    } else if viewState.weather != nil {
+                        // Показываем информацию о погоде, если она доступна
+                        Text("Данные погоды загружены")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.white)
+                            .shadow(color: .black.opacity(0.3), radius: 2)
                     }
                     
                     Spacer()
@@ -644,7 +657,11 @@ struct WeatherBackgroundView: View {
     
     var body: some View {
         ZStack {
-            // Sky gradient
+            // Sky gradient - всегда показываем базовый градиент для предотвращения черного экрана
+            LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea(.all)
+            
+            // Затем накладываем специфичный градиент для погоды
             gradient
                 .ignoresSafeArea(.all)
                 .animation(.easeInOut(duration: 1.0), value: icon)

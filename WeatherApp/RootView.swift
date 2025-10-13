@@ -146,7 +146,12 @@ private struct WeatherDetailInline: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
-            Group {
+            ZStack {
+                // Базовый градиент для гарантии отсутствия черного экрана
+                LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom)
+                    .ignoresSafeArea(.all)
+                
+                // Анимированный фон погоды
                 WeatherBackgroundView(icon: weather.icon)
             }
         )
