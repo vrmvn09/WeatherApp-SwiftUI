@@ -8,10 +8,12 @@
 
 import SwiftUI
 
-final class ApplicationViewBuilder : Assembly, ObservableObject {
+final class ApplicationViewBuilder {
     
-    required init(container: Container) {
-        super.init(container: container)
+    private let container: Container
+    
+    init(container: Container) {
+        self.container = container
     }
    
     @ViewBuilder

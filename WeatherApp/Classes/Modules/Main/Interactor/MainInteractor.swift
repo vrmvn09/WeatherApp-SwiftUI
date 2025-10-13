@@ -12,11 +12,9 @@ import CoreLocation
 final class MainInteractor: MainInteractorProtocol {
     weak var presenter: MainPresenterProtocol?
     private let network: NetworkServiceProtocol
-    private let defaultCity: String
 
-    init(network: NetworkServiceProtocol, city: String = "Almaty") {
+    init(network: NetworkServiceProtocol) {
         self.network = network
-        self.defaultCity = city
     }
 
     func fetchCitySuggestions(for query: String, completion: @escaping (Result<[GeoLocation], Error>) -> Void) {
@@ -41,8 +39,9 @@ final class MainInteractor: MainInteractorProtocol {
     }
 
     func fetchCurrentWeather() {
-        fetchWeather(for: defaultCity)
+        fetchWeather(for: "Almaty")
     }
+
 
     func fetchWeather(for city: GeoLocation) {
         fetchWeather(for: city.name)

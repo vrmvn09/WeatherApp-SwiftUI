@@ -16,9 +16,6 @@ final class MainPresenter: MainPresenterProtocol {
     private let interactor: MainInteractorProtocol
     private var navigateOnNextFetch = false
     private var pendingCityForNavigation: GeoLocation?
-    private var savedCities: [GeoLocation] = [] {
-        didSet { viewState?.updateSavedCities(savedCities) }
-    }
     
     private let allCities: [GeoLocation] = [
         GeoLocation(name: "Almaty", lat: 43.222, lon: 76.851, country: "KZ"),
@@ -38,11 +35,16 @@ final class MainPresenter: MainPresenterProtocol {
         if let interactor = interactor as? MainInteractor {
             interactor.presenter = self
         }
+        
+        // Set presenter reference in router
+        if let router = router as? MainRouter {
+            router.setPresenter(self)
+        }
     }
     
     func onAppear() {
         // Do not auto-fetch weather on launch; show empty state with search and saved list
-        viewState?.updateSavedCities(savedCities)
+        // ViewState уже загружает сохраненные города при инициализации
     }
     
     func updateSuggestions(for text: String) {
@@ -77,22 +79,46 @@ final class MainPresenter: MainPresenterProtocol {
     }
 
     func addCityToList(_ city: GeoLocation) {
+        guard let viewState = viewState as? MainViewState else { return }
+        
         if city.name == "My Location" {
-            if let idx = savedCities.firstIndex(where: { $0.name == "My Location" }) {
+            if let idx = viewState.savedCities.firstIndex(where: { $0.name == "My Location" }) {
                 // update coordinates of existing My Location entry
-                savedCities[idx] = city
+                print("🔄 Updating My Location coordinates")
+                var updatedCities = viewState.savedCities
+                updatedCities[idx] = city
+                viewState.updateSavedCities(updatedCities)
             } else {
-                savedCities.insert(city, at: 0)
+                print("📍 Adding My Location to list")
+                var updatedCities = viewState.savedCities
+                updatedCities.insert(city, at: 0)
+                viewState.updateSavedCities(updatedCities)
             }
             return
         }
-        guard !savedCities.contains(city) else { return }
-        savedCities.append(city)
+        
+        if viewState.savedCities.contains(city) {
+            print("⚠️ City \(city.name) already exists in list")
+            return
+        }
+        
+        print("➕ Adding new city: \(city.name), \(city.country) to list")
+        var updatedCities = viewState.savedCities
+        updatedCities.append(city)
+        viewState.updateSavedCities(updatedCities)
         // Do not navigate automatically; left for user to tap from list
     }
 
     func removeCity(_ city: GeoLocation) {
-        savedCities.removeAll { $0 == city }
+        guard let viewState = viewState as? MainViewState else { return }
+        var updatedCities = viewState.savedCities
+        updatedCities.removeAll { $0 == city }
+        viewState.updateSavedCities(updatedCities)
+    }
+    
+    func isCityInSavedList(_ city: GeoLocation) -> Bool {
+        guard let viewState = viewState as? MainViewState else { return false }
+        return viewState.savedCities.contains(city)
     }
     
     func fetchWeatherFromText(_ text: String) {
@@ -117,9 +143,9 @@ final class MainPresenter: MainPresenterProtocol {
         viewState?.updateWeather(entity)
         if navigateOnNextFetch {
             navigateOnNextFetch = false
-            // pass snapshot of saved cities for detail UI state (plus/checkmark)
-            if let nav = (router as? MainRouter)?.navigation as? NavigationService {
-                nav.savedCitiesSnapshot = savedCities
+            // Автоматически добавляем город в список только для геолокации
+            if let city = pendingCityForNavigation, city.name == "My Location" {
+                addCityToList(city)
             }
             router.showWeatherDetail(for: entity, city: pendingCityForNavigation)
             pendingCityForNavigation = nil
@@ -131,3 +157,4 @@ final class MainPresenter: MainPresenterProtocol {
         viewState?.updateErrorMessage(message)
     }
 }
+

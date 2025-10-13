@@ -101,8 +101,12 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     }
 
     func requestLocation() {
-        manager.requestWhenInUseAuthorization()
-        manager.requestLocation()
+        // Проверяем статус авторизации перед запросом
+        if manager.authorizationStatus == .notDetermined {
+            manager.requestWhenInUseAuthorization()
+        } else if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
+            manager.requestLocation()
+        }
     }
 
     func requestPermission() {
@@ -165,9 +169,16 @@ public class NavigationService: NavigationServiceType  {
     @Published var popupView: Views?
     @Published var items: [Views] = []
     @Published var alert: CustomAlert?
-    @Published var selectedWeather: WeatherEntity?
-    @Published var selectedCityMeta: GeoLocation?
-    @Published var savedCitiesSnapshot: [GeoLocation]?
+    
+    // Weather data for detail view
+    var currentWeather: WeatherEntity?
+    var currentCity: GeoLocation?
+    
+    // Callback для добавления города
+    var onAddCity: ((GeoLocation) -> Void)?
+    
+    // Информация о том, есть ли город в списке
+    var isCityInList: Bool = false
 }
 
 

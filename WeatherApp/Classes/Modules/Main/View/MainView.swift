@@ -10,7 +10,7 @@ import SwiftUI
 import CoreLocation
 
 struct MainView: View {
-    @StateObject var viewState: MainViewState
+    @ObservedObject var viewState: MainViewState
     @State private var searchText = ""
     @State private var gradientShift: Double = 0.0
     @StateObject private var locationManager = LocationManager()
@@ -20,11 +20,10 @@ struct MainView: View {
     @State private var shouldNavigateOnLocation = true
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // Background (static on main screen)
-                LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom)
-                    .ignoresSafeArea(.all)
+        ZStack {
+            // Background (static on main screen)
+            LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea(.all)
                 
                 VStack(spacing: 0) {
                     // MARK: - Header
@@ -227,11 +226,13 @@ struct MainView: View {
                 .toolbar(.hidden, for: .navigationBar)
                 .onReceive(NotificationCenter.default.publisher(for: .addCityFromDetail)) { output in
                     if let city = output.object as? GeoLocation {
+                        print("📨 Received notification to add city: \(city.name)")
                         viewState.presenter?.addCityToList(city)
+                    } else {
+                        print("❌ Failed to cast notification object to GeoLocation")
                     }
                 }
             }
-        }
     }
 
 // MARK: - Extensions
@@ -657,11 +658,13 @@ struct WeatherBackgroundView: View {
     
     var body: some View {
         ZStack {
-            // Sky gradient - всегда показываем базовый градиент для предотвращения черного экрана
-            LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom)
-                .ignoresSafeArea(.all)
+            // Базовый градиент только для ясной погоды
+            if icon.contains("01") {
+                LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom)
+                    .ignoresSafeArea(.all)
+            }
             
-            // Затем накладываем специфичный градиент для погоды
+            // Специфичный градиент для погоды (всегда показываем)
             gradient
                 .ignoresSafeArea(.all)
                 .animation(.easeInOut(duration: 1.0), value: icon)
@@ -711,21 +714,21 @@ struct WeatherBackgroundView: View {
                                           startPoint: .top, endPoint: .bottom)
         case "01n": return LinearGradient(colors: [.indigo.opacity(0.8), .black.opacity(0.9)],
                                           startPoint: .top, endPoint: .bottom)
-        case "02d", "03d", "04d": return LinearGradient(colors: [.gray.opacity(0.4), .blue.opacity(0.7)],
+        case "02d", "03d", "04d": return LinearGradient(colors: [.gray.opacity(0.9), .gray.opacity(0.95)],
                                                         startPoint: .top, endPoint: .bottom)
-        case "02n", "03n", "04n": return LinearGradient(colors: [.gray.opacity(0.6), .indigo.opacity(0.9)],
+        case "02n", "03n", "04n": return LinearGradient(colors: [.gray.opacity(0.95), .black.opacity(0.98)],
                                                         startPoint: .top, endPoint: .bottom)
-        case "09d", "10d": return LinearGradient(colors: [.gray.opacity(0.7), .blue.opacity(0.5)],
+        case "09d", "10d": return LinearGradient(colors: [.gray.opacity(0.95), .gray.opacity(0.9)],
                                                  startPoint: .top, endPoint: .bottom)
-        case "09n", "10n": return LinearGradient(colors: [.gray.opacity(0.7), .indigo.opacity(0.7)],
+        case "09n", "10n": return LinearGradient(colors: [.gray.opacity(0.95), .black.opacity(0.95)],
                                                  startPoint: .top, endPoint: .bottom)
-        case "13d": return LinearGradient(colors: [.white.opacity(0.9), .gray.opacity(0.6)],
+        case "13d": return LinearGradient(colors: [.gray.opacity(0.9), .gray.opacity(0.95)],
                                           startPoint: .top, endPoint: .bottom)
-        case "13n": return LinearGradient(colors: [.gray.opacity(0.7), .black.opacity(0.9)],
+        case "13n": return LinearGradient(colors: [.gray.opacity(0.95), .black.opacity(0.98)],
                                           startPoint: .top, endPoint: .bottom)
-        case "50d": return LinearGradient(colors: [.gray.opacity(0.5), .white.opacity(0.3)],
+        case "50d": return LinearGradient(colors: [.gray.opacity(0.9), .gray.opacity(0.85)],
                                           startPoint: .top, endPoint: .bottom)
-        case "50n": return LinearGradient(colors: [.gray.opacity(0.7), .black.opacity(0.8)],
+        case "50n": return LinearGradient(colors: [.gray.opacity(0.95), .black.opacity(0.95)],
                                           startPoint: .top, endPoint: .bottom)
         default: return LinearGradient(colors: [.blue.opacity(0.7), .cyan.opacity(0.5)],
                                        startPoint: .top, endPoint: .bottom)

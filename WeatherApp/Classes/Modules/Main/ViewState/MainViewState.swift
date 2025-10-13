@@ -31,7 +31,7 @@ struct GeoLocation: Codable, Hashable, Identifiable {
     let lon: Double
     let country: String
 
-    var id: String { "\(lat)-\(lon)" }
+    var id: String { "\(name)-\(country)-\(lat)-\(lon)" }
 }
 
 struct WeatherResponse: Codable {
@@ -93,7 +93,6 @@ final class MainViewState: ObservableObject, MainViewStateProtocol {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var citySuggestions: [GeoLocation] = []
-    @Published var searchText = ""
     @Published var savedCities: [GeoLocation] = []
 
     private let storageKey = "savedCities"
@@ -126,6 +125,7 @@ final class MainViewState: ObservableObject, MainViewStateProtocol {
     }
 
     func updateSavedCities(_ cities: [GeoLocation]) {
+        print("💾 Updating saved cities: \(cities.map { $0.name })")
         self.savedCities = cities
         saveSavedCities()
     }
