@@ -19,6 +19,8 @@ final class ApplicationViewBuilder : Assembly, ObservableObject {
         switch view {
         case .main:
             buildMain()
+        case .weather:
+            EmptyView()
         }
     }
     

@@ -19,7 +19,7 @@ final class MainAssembly: Assembly {
         let router = MainRouter(navigation: navigation)
 
         // Interactor
-        let interactor = MainInteractor()
+        let interactor = MainInteractor(network: NetworkService())
 
         //ViewState
         let viewState =  MainViewState()
