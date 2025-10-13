@@ -1,104 +1,40 @@
-WeatherApp (SwiftUI) – Setup and GitHub Deployment Guide
+# WeatherApp (SwiftUI) — Руководство по установке и запуску
 
-Overview
+## Обзор
+WeatherApp — приложение на SwiftUI с лёгкой модульной архитектурой (VIPER‑подобный подход) и небольшим DI‑контейнером. Сеть — через URLSession, данные берутся из OpenWeather API.
 
-WeatherApp is a SwiftUI application using a lightweight VIPER-like architecture and a small DI container. Networking is performed via URLSession to the OpenWeather API.
+## Ключевые возможности
+- Поиск городов и просмотр текущей погоды
+- Поддержка «My Location» (Core Location)
+- Список сохранённых городов (режим редактирования и удаление свайпом)
+- Простое сохранение данных (UserDefaults + JSON файл в Documents)
 
-Key features
-- Search cities and view current weather
-- My Location support (Core Location)
-- Saved cities list with swipe-to-delete and edit mode
-- Simple persistence (UserDefaults + JSON file in Documents)
+## Получение API‑ключа OpenWeather
+1) Зарегистрируйтесь на сайте: https://openweathermap.org/
+2) Создайте API‑ключ и скопируйте его
+3) Добавьте ключ в `Info.plist` → строковое значение `OPENWEATHER_API_KEY`
 
-Requirements
-- Xcode 15+ (iOS 17 SDK or newer recommended)
-- iOS 16+ target (can be adjusted in project settings)
-- OpenWeather API key
+## Загрузка проекта
+Выберите один из способов:
 
-Project structure (high level)
-- WeatherApp/RootApp.swift, RootView.swift – app entry and navigation host
-- Classes/Modules/Main – Main module (Presenter/Interactor/View/ViewState/Router)
-- Classes/Services/NavigationService – Navigation service, Network service, Location manager
-- Resources/ – Assets and Info.plist
+- Скачивание ZIP:
+  1. Нажмите «Code» → «Download ZIP» (или скачайте архив проекта удобным способом)
+  2. Распакуйте архив в удобную директорию
 
-Obtaining an OpenWeather API key
-1) Create an account at https://openweathermap.org/
-2) Create an API key and copy it
-3) Add key to Info.plist → OPENWEATHER_API_KEY string value
-
-Build and run (locally)
-1) Open WeatherApp.xcodeproj in Xcode
-2) Select a Simulator or a physical device
-3) Product → Run (Cmd+R)
-
-Location permissions on device
-- If the permission dialog does not appear: go to iOS Settings → the app → Location → set While Using the App, then relaunch the app.
-
-Environment configuration
-- The app reads the OpenWeather key from Info.plist (key: OPENWEATHER_API_KEY)
-- If you ever need per-environment keys, you can add an xcconfig and reference it from Info.plist using ${VARIABLE}
-
-Persisted data
-- Saved cities are persisted to UserDefaults and mirrored to Documents/saved_cities.json. This survives normal restarts; deleting the app removes data.
-
-Deploying to GitHub (new repository)
-Assumes you have git installed and a GitHub account.
-
-1) Initialize git in the project root
+- Через git (если установлен):
 ```bash
-cd /path/to/WeatherApp
-git init
-git add .
-git commit -m "chore: initial commit"
+git clone https://github.com/vrmvn09/WeatherApp-SwiftUI
 ```
 
-2) Create a new empty repository on GitHub (without README/.gitignore). Copy its URL, e.g.:
-```
-https://github.com/<your-username>/WeatherApp.git
-```
+## Сборка и запуск (локально)
+1) Откройте `WeatherApp.xcodeproj` в Xcode
+2) В `WeatherApp/Info.plist` установите `OPENWEATHER_API_KEY`
+3) Выберите симулятор или физическое устройство
+4) Product → Run (Cmd+R)
 
-3) Add remote and push
-```bash
-git branch -M main
-git remote add origin https://github.com/<your-username>/WeatherApp.git
-git push -u origin main
-```
+## Разрешения на локацию (устройство)
+- Если системный диалог не появился: откройте iOS Settings → ваше приложение → Location → выберите «While Using the App», затем вернитесь в приложение.
 
-Updating code later
-```bash
-git add -A
-git commit -m "feat: <short description>"
-git push
-```
-
-Recommended .gitignore
-If needed, generate one for Xcode/Swift and place it at the repo root.
-```gitignore
-DerivedData/
-build/
-.DS_Store
-xcuserdata/
-*.xcuserstate
-```
-
-Optional: GitHub Actions (CI build)
-You can create .github/workflows/ios-build.yml to build the project on push. Example (simplified):
-```yaml
-name: iOS Build
-on: [push, pull_request]
-jobs:
-  build:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Xcode build
-        run: xcodebuild -project WeatherApp.xcodeproj -scheme WeatherApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15' build | xcpretty
-```
-
-Security notes
-- Do not commit real API keys. For public repos, consider removing OPENWEATHER_API_KEY from Info.plist and using a sample value with instructions, or leveraging CI secrets.
-
-License
-- Add your preferred license (e.g., MIT) at the repo root if publishing publicly.
-
-
+## Конфигурация окружения
+- Приложение читает ключ OpenWeather из `Info.plist` (`OPENWEATHER_API_KEY`)
+- Для раздельных конфигураций можно завести `xcconfig` и подставлять переменную в `Info.plist` через `${VARIABLE}`
