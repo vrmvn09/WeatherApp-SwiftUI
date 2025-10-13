@@ -32,7 +32,7 @@ final class MainAssembly: Assembly {
         viewState.set(with: presenter)
         
         // View
-        let view = MainView(viewState: viewState)
+        let view = MainView(viewState: viewState, presenter: presenter)
         return view
     }
 }

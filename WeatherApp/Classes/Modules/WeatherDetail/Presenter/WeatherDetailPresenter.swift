@@ -13,53 +13,48 @@ final class WeatherDetailPresenter: WeatherDetailPresenterProtocol {
     private let router: WeatherDetailRouterProtocol
     private weak var viewState: (any WeatherDetailViewStateProtocol)?
     private let interactor: WeatherDetailInteractorProtocol
-    private weak var navigationService: NavigationService?
     
     init(router: WeatherDetailRouterProtocol,
          interactor: WeatherDetailInteractorProtocol,
-         viewState: any WeatherDetailViewStateProtocol,
-         navigationService: NavigationService) {
+         viewState: any WeatherDetailViewStateProtocol) {
         self.router = router
         self.interactor = interactor
         self.viewState = viewState
-        self.navigationService = navigationService
-        
-        // Set presenter reference in interactor
-        if let interactor = interactor as? WeatherDetailInteractor {
-            interactor.presenter = self
-        }
     }
     
     func onAppear() {
-        // Получаем данные из NavigationService
-        if let weather = navigationService?.currentWeather {
+        // Получаем данные из интерактора и обновляем ViewState
+        if let weather = interactor.getWeather() {
             viewState?.updateWeather(weather)
         }
         
-        if let city = navigationService?.currentCity {
+        if let city = interactor.getCity() {
             viewState?.updateCity(city)
-            // Используем значение из NavigationService вместо проверки через interactor
-            let isInList = navigationService?.isCityInList ?? false
-            print("📋 WeatherDetailPresenter: City '\(city.name)' isCityInList from NavigationService: \(isInList)")
-            viewState?.updateIsCityInList(isInList)
+            
+            // Бизнес-логика: определяем, показывать ли кнопку добавления
+            let shouldShowAddButton = city.name != "My Location" && !isCityInSavedList(city)
+            viewState?.updateShowAddButton(shouldShowAddButton)
         }
     }
     
+    private func isCityInSavedList(_ city: GeoLocation) -> Bool {
+        // Проверяем через UserDefaults, есть ли город в списке
+        if let data = UserDefaults.standard.data(forKey: "savedCities"),
+           let cities = try? JSONDecoder().decode([GeoLocation].self, from: data) {
+            return cities.contains(city)
+        }
+        return false
+    }
+    
     func addCityToList() {
-        guard let city = viewState?.city,
+        guard let city = interactor.getCity(),
               let added = viewState?.added,
               !added else { return }
         
         interactor.addCityToList(city)
         
-        // Обновляем состояние UI
+        // Обновляем состояние после добавления
         viewState?.updateAdded(true)
-        
-        // Автоматически скрываем кнопку через 2 секунды
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            self.viewState?.updateAdded(false)
-            self.viewState?.updateHideAddButton(true)
-        }
     }
     
     func dismiss() {

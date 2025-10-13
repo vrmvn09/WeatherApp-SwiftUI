@@ -11,6 +11,7 @@ import CoreLocation
 
 struct MainView: View {
     @ObservedObject var viewState: MainViewState
+    let presenter: MainPresenterProtocol
     @State private var searchText = ""
     @State private var gradientShift: Double = 0.0
     @StateObject private var locationManager = LocationManager()

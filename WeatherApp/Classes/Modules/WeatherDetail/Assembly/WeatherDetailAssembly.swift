@@ -10,7 +10,7 @@ import SwiftUI
 
 final class WeatherDetailAssembly: Assembly {
     
-    func build() -> some View {
+    func build(weather: WeatherEntity, city: GeoLocation) -> some View {
         let navigationService = container.resolve(NavigationAssembly.self).build() as! NavigationService
         
         let router = WeatherDetailRouter(navigationService: navigationService)
@@ -19,16 +19,13 @@ final class WeatherDetailAssembly: Assembly {
         let presenter = WeatherDetailPresenter(
             router: router,
             interactor: interactor,
-            viewState: viewState,
-            navigationService: navigationService
+            viewState: viewState
         )
         
-        viewState.set(with: presenter)
+        // Передаем данные в интерактор согласно документации
+        interactor.setWeather(weather)
+        interactor.setCity(city)
         
-        // Передаем данные напрямую из NavigationService
-        let weather = navigationService.currentWeather
-        let city = navigationService.currentCity
-        
-        return WeatherDetailView(viewState: viewState, weather: weather, city: city, interactor: interactor)
+        return WeatherDetailView(viewState: viewState, presenter: presenter)
     }
 }

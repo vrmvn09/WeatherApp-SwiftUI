@@ -9,21 +9,32 @@ import Foundation
 
 final class WeatherDetailInteractor: WeatherDetailInteractorProtocol {
     
-    weak var presenter: WeatherDetailPresenterProtocol?
+    // Данные хранятся в интеракторе
+    private var weather: WeatherEntity?
+    private var city: GeoLocation?
     
     init() {}
+    
+    // Методы для установки данных
+    func setWeather(_ weather: WeatherEntity) {
+        self.weather = weather
+    }
+    
+    func setCity(_ city: GeoLocation) {
+        self.city = city
+    }
+    
+    // Методы для получения данных
+    func getWeather() -> WeatherEntity? {
+        return weather
+    }
+    
+    func getCity() -> GeoLocation? {
+        return city
+    }
     
     func addCityToList(_ city: GeoLocation) {
         // Отправляем уведомление для добавления города в MainPresenter
         NotificationCenter.default.post(name: .addCityFromDetail, object: city)
-    }
-    
-    func isCityInSavedList(_ city: GeoLocation) -> Bool {
-        // Проверяем через UserDefaults, есть ли город в списке
-        if let data = UserDefaults.standard.data(forKey: "savedCities"),
-           let cities = try? JSONDecoder().decode([GeoLocation].self, from: data) {
-            return cities.contains(city)
-        }
-        return false
     }
 }

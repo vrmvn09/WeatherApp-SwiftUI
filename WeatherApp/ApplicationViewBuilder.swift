@@ -21,8 +21,8 @@ final class ApplicationViewBuilder {
         switch view {
         case .main:
             buildMain()
-        case .weather:
-            buildWeather()
+        case .weather(let weather, let city):
+            buildWeather(weather: weather, city: city)
         }
     }
     
@@ -32,8 +32,8 @@ final class ApplicationViewBuilder {
     }
     
     @ViewBuilder
-    fileprivate func buildWeather() -> some View {
-        container.resolve(WeatherDetailAssembly.self).build()
+    fileprivate func buildWeather(weather: WeatherEntity, city: GeoLocation) -> some View {
+        container.resolve(WeatherDetailAssembly.self).build(weather: weather, city: city)
     }
     
 }

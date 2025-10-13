@@ -24,20 +24,20 @@ protocol MainPresenterProtocol: PresenterProtocol {
     func fetchWeatherFromText(_ text: String)
     func fetchWeather(for coordinates: CLLocationCoordinate2D)
     func fetchWeatherForLocationAndNavigate(_ coordinates: CLLocationCoordinate2D)
-    func didFetchWeather(_ entity: WeatherEntity)
-    func didFail(with message: String)
 }
 
 // Interactor
 protocol MainInteractorProtocol: InteractorProtocol {
-    func fetchCurrentWeather()
-    func fetchWeather(for location: GeoLocation)
-    func fetchWeather(lat: Double, lon: Double)
+    func fetchCurrentWeather() async throws -> WeatherEntity
+    func fetchWeather(for location: GeoLocation) async throws -> WeatherEntity
+    func fetchWeather(for coordinates: CLLocationCoordinate2D) async throws -> WeatherEntity
+    func fetchWeather(lat: Double, lon: Double) async throws -> WeatherEntity
     func fetchCitySuggestions(for query: String, completion: @escaping (Result<[GeoLocation], Error>) -> Void)
 }
 
 // ViewState
 protocol MainViewStateProtocol: ViewStateProtocol {
+    var citySuggestions: [GeoLocation] { get }
     func set(with presenter: MainPresenterProtocol)
     func updateWeather(_ weather: WeatherEntity)
     func updateLoading(_ isLoading: Bool)

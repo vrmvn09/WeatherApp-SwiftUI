@@ -170,15 +170,6 @@ public class NavigationService: NavigationServiceType  {
     @Published var items: [Views] = []
     @Published var alert: CustomAlert?
     
-    // Weather data for detail view
-    var currentWeather: WeatherEntity?
-    var currentCity: GeoLocation?
-    
-    // Callback для добавления города
-    var onAddCity: ((GeoLocation) -> Void)?
-    
-    // Информация о том, есть ли город в списке
-    var isCityInList: Bool = false
 }
 
 
@@ -195,14 +186,14 @@ enum Views: Identifiable, Equatable, Hashable {
     }
     
     case main
-    case weather
+    case weather(weather: WeatherEntity, city: GeoLocation)
     
     var stringKey: String {
         switch self {
         case .main:
             return "main"
-        case .weather:
-            return "weather"
+        case .weather(let weather, let city):
+            return "weather-\(weather.city)-\(city.name)"
         }
     }
 }

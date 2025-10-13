@@ -14,8 +14,6 @@ final class MainPresenter: MainPresenterProtocol {
     private let router: MainRouterProtocol
     private weak var viewState: MainViewStateProtocol?
     private let interactor: MainInteractorProtocol
-    private var navigateOnNextFetch = false
-    private var pendingCityForNavigation: GeoLocation?
     
     private let allCities: [GeoLocation] = [
         GeoLocation(name: "Almaty", lat: 43.222, lon: 76.851, country: "KZ"),
@@ -31,15 +29,7 @@ final class MainPresenter: MainPresenterProtocol {
         self.interactor = interactor
         self.viewState = viewState
         
-        // Set presenter reference in interactor
-        if let interactor = interactor as? MainInteractor {
-            interactor.presenter = self
-        }
-        
-        // Set presenter reference in router
-        if let router = router as? MainRouter {
-            router.setPresenter(self)
-        }
+        // Interactor не должен иметь ссылку на Presenter согласно VIPER архитектуре
     }
     
     func onAppear() {
@@ -68,14 +58,30 @@ final class MainPresenter: MainPresenterProtocol {
     
     func selectCity(_ city: GeoLocation) {
         viewState?.updateLoading(true)
-        navigateOnNextFetch = true
-        pendingCityForNavigation = city
-        if city.name == "My Location" {
-            interactor.fetchWeather(lat: city.lat, lon: city.lon)
-        } else {
-            interactor.fetchWeather(for: city)
+        
+        Task {
+            do {
+                let weather: WeatherEntity
+                if city.name == "My Location" {
+                    weather = try await interactor.fetchWeather(lat: city.lat, lon: city.lon)
+                } else {
+                    weather = try await interactor.fetchWeather(for: city)
+                }
+                
+                await MainActor.run {
+                    viewState?.updateLoading(false)
+                    viewState?.updateWeather(weather)
+                    viewState?.updateCitySuggestions([])
+                    router.showWeatherDetail(for: weather, city: city)
+                }
+            } catch {
+                await MainActor.run {
+                    viewState?.updateLoading(false)
+                    viewState?.updateErrorMessage(error.localizedDescription)
+                    viewState?.updateCitySuggestions([])
+                }
+            }
         }
-        viewState?.updateCitySuggestions([])
     }
 
     func addCityToList(_ city: GeoLocation) {
@@ -129,32 +135,45 @@ final class MainPresenter: MainPresenterProtocol {
     
     func fetchWeather(for coordinates: CLLocationCoordinate2D) {
         viewState?.updateLoading(true)
-        interactor.fetchWeather(lat: coordinates.latitude, lon: coordinates.longitude)
+        
+        Task {
+            do {
+                let weather = try await interactor.fetchWeather(lat: coordinates.latitude, lon: coordinates.longitude)
+                await MainActor.run {
+                    viewState?.updateLoading(false)
+                    viewState?.updateWeather(weather)
+                }
+            } catch {
+                await MainActor.run {
+                    viewState?.updateLoading(false)
+                    viewState?.updateErrorMessage(error.localizedDescription)
+                }
+            }
+        }
     }
 
     func fetchWeatherForLocationAndNavigate(_ coordinates: CLLocationCoordinate2D) {
-        navigateOnNextFetch = true
-        pendingCityForNavigation = GeoLocation(name: "My Location", lat: coordinates.latitude, lon: coordinates.longitude, country: "")
-        fetchWeather(for: coordinates)
-    }
-    
-    func didFetchWeather(_ entity: WeatherEntity) {
-        viewState?.updateLoading(false)
-        viewState?.updateWeather(entity)
-        if navigateOnNextFetch {
-            navigateOnNextFetch = false
-            // Автоматически добавляем город в список только для геолокации
-            if let city = pendingCityForNavigation, city.name == "My Location" {
-                addCityToList(city)
+        viewState?.updateLoading(true)
+        
+        Task {
+            do {
+                let weather = try await interactor.fetchWeather(lat: coordinates.latitude, lon: coordinates.longitude)
+                let city = GeoLocation(name: "My Location", lat: coordinates.latitude, lon: coordinates.longitude, country: "")
+                
+                await MainActor.run {
+                    viewState?.updateLoading(false)
+                    viewState?.updateWeather(weather)
+                    addCityToList(city)
+                    router.showWeatherDetail(for: weather, city: city)
+                }
+            } catch {
+                await MainActor.run {
+                    viewState?.updateLoading(false)
+                    viewState?.updateErrorMessage(error.localizedDescription)
+                }
             }
-            router.showWeatherDetail(for: entity, city: pendingCityForNavigation)
-            pendingCityForNavigation = nil
         }
     }
     
-    func didFail(with message: String) {
-        viewState?.updateLoading(false)
-        viewState?.updateErrorMessage(message)
-    }
 }
 
