@@ -13,10 +13,10 @@ final class MainAssembly: Assembly {
     
     func build() -> some View {
         
-        let navigation = container.resolve(NavigationAssembly.self).build()
+        let navigationService = container.resolve(NavigationAssembly.self).build()
 
         // Router
-        let router = MainRouter(navigation: navigation)
+        let router = MainRouter(navigationService: navigationService)
 
         // Interactor
         let interactor = MainInteractor(network: NetworkService())

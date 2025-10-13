@@ -16,29 +16,40 @@ struct RootView: View {
     
     var body: some View {
         NavigationStack(path: $navigationService.items) {
-            appViewBuilder.build(view: .main)
-                .navigationDestination(for: Views.self) { path in
-                    appViewBuilder.build(view: path)
+            appViewBuilder.build(view: .Main)
+                .navigationDestination(for: Module.self) { module in
+                    appViewBuilder.build(view: module)
                 }
         }
-        .fullScreenCover(item: $navigationService.popupView) { item in
-            appViewBuilder.build(view: item)
+        .fullScreenCover(item: $navigationService.popup) { module in
+            appViewBuilder.build(view: module)
                 .presentationBackground(.clear)
         }
-        .fullScreenCover(item: $navigationService.modalView) { item in
-            appViewBuilder.build(view: item)
+        .fullScreenCover(item: $navigationService.fullScreen) { module in
+            appViewBuilder.build(view: module)
         }
-        .alert(isPresented: .constant($navigationService.alert.wrappedValue != nil)) {
-            switch navigationService.alert {
-            case .defaultAlert(let yesAction, let noAction):
-                return Alert(title: Text("Title"),
-                             primaryButton: .default(Text("Yes"), action: yesAction),
-                             secondaryButton: .destructive(Text("No"), action: noAction))
-            case .none:
-                fatalError()
-            }
+        .alert(item: $navigationService.alert) { alertType in
+            buildAlert(for: alertType)
         }
-        
+    }
+    
+    private func buildAlert(for alertType: NavigationAlert) -> Alert {
+        switch alertType {
+        case .deleteConfirmation(let yesAction, let noAction):
+            return Alert(
+                title: Text("Delete Item"),
+                message: Text("Are you sure you want to delete this item?"),
+                primaryButton: .destructive(Text("Delete"), action: yesAction),
+                secondaryButton: .cancel(Text("Cancel"), action: noAction)
+            )
+        case .networkError(let retryAction):
+            return Alert(
+                title: Text("Network Error"),
+                message: Text("Please check your connection and try again."),
+                primaryButton: .default(Text("Retry"), action: retryAction),
+                secondaryButton: .cancel()
+            )
+        }
     }
 }
 

@@ -15,11 +15,11 @@ final class ApplicationViewBuilder: Assembly, ObservableObject {
     }
    
     @ViewBuilder
-    func build(view: Views) -> some View {
+    func build(view: Module) -> some View {
         switch view {
-        case .main:
+        case .Main:
             buildMainModule()
-        case .weather(let weather, let city):
+        case .Weather(let weather, let city):
             buildWeatherModule(weather: weather, city: city)
         }
     }

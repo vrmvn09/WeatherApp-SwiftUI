@@ -165,19 +165,19 @@ public class NavigationService: NavigationServiceType  {
         lhs.id == rhs.id
     }
     
-    @Published var modalView: Views?
-    @Published var popupView: Views?
-    @Published var items: [Views] = []
-    @Published var alert: CustomAlert?
+    @Published var fullScreen: Module?
+    @Published var popup: Module?
+    @Published var items: [Module] = []
+    @Published var alert: NavigationAlert?
     
 }
 
 
-enum Views: Identifiable, Equatable, Hashable {
+enum Module: Identifiable, Equatable, Hashable {
 
     var id: String { stringKey }
 
-    static func == (lhs: Views, rhs: Views) -> Bool {
+    static func == (lhs: Module, rhs: Module) -> Bool {
         lhs.stringKey == rhs.stringKey
     }
     
@@ -185,31 +185,36 @@ enum Views: Identifiable, Equatable, Hashable {
         hasher.combine(self.stringKey)
     }
     
-    case main
-    case weather(weather: WeatherEntity, city: GeoLocation)
+    case Main
+    case Weather(weather: WeatherEntity, city: GeoLocation)
     
     var stringKey: String {
         switch self {
-        case .main:
-            return "main"
-        case .weather(let weather, let city):
-            return "weather-\(weather.city)-\(city.name)"
+        case .Main:
+            return "Main"
+        case .Weather(let weather, let city):
+            return "Weather-\(weather.city)-\(city.name)"
         }
     }
 }
 
 
-enum CustomAlert: Equatable, Hashable {
-    static func == (lhs: CustomAlert, rhs: CustomAlert) -> Bool {
+enum NavigationAlert: Identifiable, Equatable, Hashable {
+    var id: Int { hashValue }
+    
+    static func == (lhs: NavigationAlert, rhs: NavigationAlert) -> Bool {
         lhs.hashValue == rhs.hashValue
     }
     
     func hash(into hasher: inout Hasher) {
         switch self {
-        case .defaultAlert:
-            hasher.combine("defaultAlert")
+        case .deleteConfirmation:
+            hasher.combine("deleteConfirmation")
+        case .networkError:
+            hasher.combine("networkError")
         }
     }
     
-    case defaultAlert(yesAction: (()->Void)?, noAction: (()->Void)?)
+    case deleteConfirmation(yesAction: (() -> Void)?, noAction: (() -> Void)?)
+    case networkError(retryAction: (() -> Void)?)
 }
