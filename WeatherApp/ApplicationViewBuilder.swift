@@ -33,7 +33,7 @@ final class ApplicationViewBuilder {
     
     @ViewBuilder
     fileprivate func buildWeather() -> some View {
-        WeatherDetailView(navigationService: container.resolve(NavigationAssembly.self).build() as! NavigationService)
+        container.resolve(WeatherDetailAssembly.self).build()
     }
     
 }

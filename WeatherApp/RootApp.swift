@@ -20,6 +20,7 @@ struct RootApp: App {
     
         // Modules
         container.apply(MainAssembly.self)
+        container.apply(WeatherDetailAssembly.self)
 
         return container
     }()

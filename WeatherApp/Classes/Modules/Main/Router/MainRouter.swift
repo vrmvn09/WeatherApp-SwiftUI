@@ -24,6 +24,7 @@ final class MainRouter: MainRouterProtocol {
         if let nav = navigation as? NavigationService {
             nav.currentWeather = weather
             nav.currentCity = city
+            
             // Устанавливаем callback для добавления города
             nav.onAddCity = { [weak self] city in
                 self?.presenter?.addCityToList(city)
