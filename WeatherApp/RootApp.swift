@@ -17,6 +17,7 @@ struct RootApp: App {
                 
         // Services
         container.apply(NavigationAssembly.self)
+        container.apply(ApplicationViewBuilder.self)
     
         // Modules
         container.apply(MainAssembly.self)
@@ -29,7 +30,7 @@ struct RootApp: App {
         WindowGroup {
             RootView(
                 navigationService: container.resolve(NavigationAssembly.self).build() as! NavigationService,
-                appViewBuilder: ApplicationViewBuilder(container: container)
+                appViewBuilder: container.resolve(ApplicationViewBuilder.self)
             )
         }
     }

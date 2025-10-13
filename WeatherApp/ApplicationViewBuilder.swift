@@ -8,41 +8,31 @@
 
 import SwiftUI
 
-final class ApplicationViewBuilder {
+final class ApplicationViewBuilder: Assembly, ObservableObject {
     
-    private let container: Container
-    
-    init(container: Container) {
-        self.container = container
+    required init(container: Container) {
+        super.init(container: container)
     }
    
     @ViewBuilder
     func build(view: Views) -> some View {
         switch view {
         case .main:
-            buildMain()
+            buildMainModule()
         case .weather(let weather, let city):
-            buildWeather(weather: weather, city: city)
+            buildWeatherModule(weather: weather, city: city)
         }
     }
     
+    // Private builder methods
     @ViewBuilder
-    fileprivate func buildMain() -> some View {
+    private func buildMainModule() -> some View {
         container.resolve(MainAssembly.self).build()
     }
     
     @ViewBuilder
-    fileprivate func buildWeather(weather: WeatherEntity, city: GeoLocation) -> some View {
+    private func buildWeatherModule(weather: WeatherEntity, city: GeoLocation) -> some View {
         container.resolve(WeatherDetailAssembly.self).build(weather: weather, city: city)
     }
     
-}
-
-extension ApplicationViewBuilder {
-    
-    static var stub: ApplicationViewBuilder {
-        return ApplicationViewBuilder(
-            container: RootApp().container
-        )
-    }
 }

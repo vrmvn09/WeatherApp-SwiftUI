@@ -913,7 +913,8 @@ struct MoonGlowView: View {
 
 struct MainPreviews: PreviewProvider {
     static var previews: some View {
-        ApplicationViewBuilder.stub.build(view: .main)
+        // Простой Preview без ApplicationViewBuilder
+        Text("Main View Preview")
     }
 }
 
