@@ -22,13 +22,18 @@ final class ApplicationViewBuilder {
         case .main:
             buildMain()
         case .weather:
-            EmptyView()
+            buildWeather()
         }
     }
     
     @ViewBuilder
     fileprivate func buildMain() -> some View {
         container.resolve(MainAssembly.self).build()
+    }
+    
+    @ViewBuilder
+    fileprivate func buildWeather() -> some View {
+        WeatherDetailView(navigationService: container.resolve(NavigationAssembly.self).build() as! NavigationService)
     }
     
 }

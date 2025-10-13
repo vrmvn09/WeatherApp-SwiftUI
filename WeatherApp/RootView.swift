@@ -18,12 +18,7 @@ struct RootView: View {
         NavigationStack(path: $navigationService.items) {
             appViewBuilder.build(view: .main)
                 .navigationDestination(for: Views.self) { path in
-                    switch path {
-                    case .weather:
-                        WeatherDetailView(navigationService: navigationService)
-                    default:
-                        EmptyView()
-                    }
+                    appViewBuilder.build(view: path)
                 }
         }
         .fullScreenCover(item: $navigationService.popupView) { item in
