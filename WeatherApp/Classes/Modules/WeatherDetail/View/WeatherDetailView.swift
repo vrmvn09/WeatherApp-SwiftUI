@@ -9,21 +9,37 @@ import SwiftUI
 
 struct WeatherDetailView: View {
     @ObservedObject var viewState: WeatherDetailViewState
-    let presenter: WeatherDetailPresenterProtocol
     
-    init(viewState: WeatherDetailViewState, presenter: WeatherDetailPresenterProtocol) {
+    init(viewState: WeatherDetailViewState) {
         self.viewState = viewState
-        self.presenter = presenter
     }
     
     var body: some View {
         VStack(spacing: 20) {
             HStack {
+                // Кнопка "Back"
+                Button(action: {
+                    viewState.navigateBack()
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .semibold))
+                        Text("Back")
+                            .font(.system(size: 16, weight: .medium))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.ultraThinMaterial.opacity(0.4))
+                    .clipShape(Capsule())
+                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                }
+                
                 Spacer()
                 
                        // Кнопка добавления города
                        Button(action: {
-                           presenter.addCityToList()
+                           viewState.addCityToList()
                        }) {
                            Image(systemName: viewState.buttonIcon)
                                .font(.system(size: 24, weight: .bold))
@@ -87,9 +103,9 @@ struct WeatherDetailView: View {
             }
         )
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .navigationBar)
                .onAppear {
-                   presenter.onAppear()
+                   viewState.onAppear()
                }
     }
 }

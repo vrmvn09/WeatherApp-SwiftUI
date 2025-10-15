@@ -34,56 +34,6 @@ struct GeoLocation: Codable, Hashable, Identifiable {
     var id: String { "\(name)-\(country)-\(lat)-\(lon)" }
 }
 
-struct WeatherResponse: Codable {
-    let name: String
-    let weather: [WeatherInfo]
-    let main: MainInfo
-    let wind: WindInfo
-    let sys: SystemInfo
-}
-
-struct SystemInfo: Codable {
-    let sunrise: TimeInterval
-    let sunset: TimeInterval
-}
-
-struct WeatherInfo: Codable {
-    let id: Int
-    let main: String
-    let description: String
-    let icon: String
-}
-
-struct MainInfo: Codable {
-    let temp: Double
-    let feels_like: Double
-    let humidity: Int
-    let pressure: Int
-}
-
-struct WindInfo: Codable {
-    let speed: Double
-}
-
-// MARK: - Network Errors
-enum NetworkError: Error, LocalizedError {
-    case invalidURL
-    case invalidResponse
-    case decodingError
-    case requestFailed
-    case missingAPIKey
-
-    var errorDescription: String? {
-        switch self {
-        case .invalidURL: return "Invalid request URL."
-        case .invalidResponse: return "Server returned invalid response."
-        case .decodingError: return "Failed to decode server data."
-        case .requestFailed: return "Network request failed."
-        case .missingAPIKey: return "Missing or invalid API key."
-        }
-    }
-}
-
 final class MainViewState: ObservableObject, MainViewStateProtocol {    
     private let id = UUID()
     var presenter: MainPresenterProtocol?
@@ -128,6 +78,35 @@ final class MainViewState: ObservableObject, MainViewStateProtocol {
         print("💾 Updating saved cities: \(cities.map { $0.name })")
         self.savedCities = cities
         saveSavedCities()
+    }
+    
+    // MARK: - User Actions (delegate to presenter)
+    func fetchWeatherFromText(_ text: String) {
+        presenter?.fetchWeatherFromText(text)
+    }
+    
+    func updateSuggestions(for text: String) {
+        presenter?.updateSuggestions(for: text)
+    }
+    
+    func removeCity(_ city: GeoLocation) {
+        presenter?.removeCity(city)
+    }
+    
+    func selectCity(_ city: GeoLocation) {
+        presenter?.selectCity(city)
+    }
+    
+    func addCityToList(_ city: GeoLocation) {
+        presenter?.addCityToList(city)
+    }
+    
+    func onAppear() {
+        presenter?.onAppear()
+    }
+    
+    func fetchWeatherForLocationAndNavigate(_ coords: CLLocationCoordinate2D) {
+        presenter?.fetchWeatherForLocationAndNavigate(coords)
     }
 
     func persistLastLocation(_ coords: CLLocationCoordinate2D) {

@@ -34,7 +34,7 @@ final class WeatherDetailInteractor: WeatherDetailInteractorProtocol {
     }
     
     func addCityToList(_ city: GeoLocation) {
-        // Отправляем уведомление для добавления города в MainPresenter
-        NotificationCenter.default.post(name: .addCityFromDetail, object: city)
+        // Этот метод больше не нужен - логика перенесена в Router
+        // Router будет вызывать этот метод через Presenter
     }
 }

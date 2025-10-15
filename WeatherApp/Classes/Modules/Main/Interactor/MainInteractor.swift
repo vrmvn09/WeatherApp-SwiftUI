@@ -10,19 +10,16 @@ import Foundation
 import CoreLocation
 
 final class MainInteractor: MainInteractorProtocol {
-    private let network: NetworkServiceProtocol
+    private let weatherAPIService: WeatherAPIServiceType
 
-    init(network: NetworkServiceProtocol) {
-        self.network = network
+    init(weatherAPIService: WeatherAPIServiceType) {
+        self.weatherAPIService = weatherAPIService
     }
 
     func fetchCitySuggestions(for query: String, completion: @escaping (Result<[GeoLocation], Error>) -> Void) {
         Task {
             do {
-                let url = try OpenWeatherAPI.citySearch(for: query)
-                print("🌍 Fetching cities from:", url.absoluteString)
-                
-                let response: [GeoLocation] = try await network.request(url)
+                let response = try await weatherAPIService.fetchCitySuggestions(for: query, limit: 5)
                 print("✅ Cities fetched:", response.map { $0.name })
 
                 await MainActor.run {
@@ -50,41 +47,11 @@ final class MainInteractor: MainInteractorProtocol {
     }
 
     private func fetchWeather(for cityName: String) async throws -> WeatherEntity {
-        let url = try OpenWeatherAPI.weather(for: cityName)
-        let weather: WeatherResponse = try await network.request(url)
-        
-        return WeatherEntity(
-            city: weather.name,
-            temperature: weather.main.temp,
-            description: weather.weather.first?.description ?? "",
-            icon: weather.weather.first?.icon ?? "",
-            conditionName: weather.weather.first?.main ?? "Clear",
-            humidity: weather.main.humidity,
-            windSpeed: weather.wind.speed,
-            feelsLike: weather.main.feels_like,
-            pressure: weather.main.pressure,
-            sunrise: Date(timeIntervalSince1970: weather.sys.sunrise),
-            sunset: Date(timeIntervalSince1970: weather.sys.sunset)
-        )
+        return try await weatherAPIService.fetchWeather(for: cityName)
     }
 
     func fetchWeather(lat: Double, lon: Double) async throws -> WeatherEntity {
-        let url = try OpenWeatherAPI.weather(lat: lat, lon: lon)
-        let weather: WeatherResponse = try await network.request(url)
-        
-        return WeatherEntity(
-            city: weather.name,
-            temperature: weather.main.temp,
-            description: weather.weather.first?.description ?? "",
-            icon: weather.weather.first?.icon ?? "",
-            conditionName: weather.weather.first?.main ?? "Clear",
-            humidity: weather.main.humidity,
-            windSpeed: weather.wind.speed,
-            feelsLike: weather.main.feels_like,
-            pressure: weather.main.pressure,
-            sunrise: Date(timeIntervalSince1970: weather.sys.sunrise),
-            sunset: Date(timeIntervalSince1970: weather.sys.sunset)
-        )
+        return try await weatherAPIService.fetchWeather(lat: lat, lon: lon)
     }
 }
 

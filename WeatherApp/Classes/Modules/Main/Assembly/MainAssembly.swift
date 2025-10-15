@@ -19,7 +19,8 @@ final class MainAssembly: Assembly {
         let router = MainRouter(navigationService: navigationService)
 
         // Interactor
-        let interactor = MainInteractor(network: NetworkService())
+        let weatherAPIService = container.resolve(WeatherAPIAssembly.self).build()
+        let interactor = MainInteractor(weatherAPIService: weatherAPIService)
 
         //ViewState
         let viewState =  MainViewState()
@@ -32,7 +33,7 @@ final class MainAssembly: Assembly {
         viewState.set(with: presenter)
         
         // View
-        let view = MainView(viewState: viewState, presenter: presenter)
+        let view = MainView(viewState: viewState)
         return view
     }
 }

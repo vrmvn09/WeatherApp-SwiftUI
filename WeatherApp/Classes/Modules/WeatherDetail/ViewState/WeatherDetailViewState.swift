@@ -15,14 +15,10 @@ final class WeatherDetailViewState: ObservableObject, WeatherDetailViewStateProt
     @Published var showAddButton: Bool = false
     @Published var added: Bool = false
     
-    private weak var presenterRef: WeatherDetailPresenterProtocol?
-    
-    var presenter: WeatherDetailPresenterProtocol? {
-        return presenterRef
-    }
+    var presenter: WeatherDetailPresenterProtocol?
     
     func set(with presenter: WeatherDetailPresenterProtocol) {
-        self.presenterRef = presenter
+        self.presenter = presenter
     }
     
     // Computed properties для UI состояния
@@ -93,26 +89,31 @@ final class WeatherDetailViewState: ObservableObject, WeatherDetailViewStateProt
     }
     
     func updateWeather(_ weather: WeatherEntity?) {
-        DispatchQueue.main.async {
-            self.weather = weather
-        }
+        self.weather = weather
     }
     
     func updateCity(_ city: GeoLocation?) {
-        DispatchQueue.main.async {
-            self.city = city
-        }
+        self.city = city
     }
     
     func updateShowAddButton(_ show: Bool) {
-        DispatchQueue.main.async {
-            self.showAddButton = show
-        }
+        self.showAddButton = show
     }
     
     func updateAdded(_ added: Bool) {
-        DispatchQueue.main.async {
-            self.added = added
-        }
+        self.added = added
+    }
+    
+    // MARK: - User Actions (delegate to presenter)
+    func addCityToList() {
+        presenter?.addCityToList()
+    }
+    
+    func onAppear() {
+        presenter?.onAppear()
+    }
+    
+    func navigateBack() {
+        presenter?.navigateBack()
     }
 }

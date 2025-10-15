@@ -10,23 +10,22 @@ import SwiftUI
 import Foundation
 
 struct RootView: View {
-    
     @ObservedObject var navigationService: NavigationService
-    let appViewBuilder: ApplicationViewBuilder
+    @ObservedObject var applicationViewBuilder: ApplicationViewBuilder
     
     var body: some View {
         NavigationStack(path: $navigationService.items) {
-            appViewBuilder.build(view: .Main)
+            applicationViewBuilder.build(view: .Main)
                 .navigationDestination(for: Module.self) { module in
-                    appViewBuilder.build(view: module)
+                    applicationViewBuilder.build(view: module)
                 }
         }
         .fullScreenCover(item: $navigationService.popup) { module in
-            appViewBuilder.build(view: module)
+            applicationViewBuilder.build(view: module)
                 .presentationBackground(.clear)
         }
         .fullScreenCover(item: $navigationService.fullScreen) { module in
-            appViewBuilder.build(view: module)
+            applicationViewBuilder.build(view: module)
         }
         .alert(item: $navigationService.alert) { alertType in
             buildAlert(for: alertType)

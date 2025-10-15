@@ -25,15 +25,19 @@ final class WeatherDetailPresenter: WeatherDetailPresenterProtocol {
     func onAppear() {
         // Получаем данные из интерактора и обновляем ViewState
         if let weather = interactor.getWeather() {
-            viewState?.updateWeather(weather)
+            DispatchQueue.main.async {
+                self.viewState?.updateWeather(weather)
+            }
         }
         
         if let city = interactor.getCity() {
-            viewState?.updateCity(city)
-            
-            // Бизнес-логика: определяем, показывать ли кнопку добавления
-            let shouldShowAddButton = city.name != "My Location" && !isCityInSavedList(city)
-            viewState?.updateShowAddButton(shouldShowAddButton)
+            DispatchQueue.main.async {
+                self.viewState?.updateCity(city)
+                
+                // Бизнес-логика: определяем, показывать ли кнопку добавления
+                let shouldShowAddButton = city.name != "My Location" && !self.isCityInSavedList(city)
+                self.viewState?.updateShowAddButton(shouldShowAddButton)
+            }
         }
     }
     
@@ -51,7 +55,8 @@ final class WeatherDetailPresenter: WeatherDetailPresenterProtocol {
               let added = viewState?.added,
               !added else { return }
         
-        interactor.addCityToList(city)
+        // Используем Router для добавления города
+        router.addCityToList(city)
         
         // Обновляем состояние после добавления
         viewState?.updateAdded(true)
@@ -59,5 +64,9 @@ final class WeatherDetailPresenter: WeatherDetailPresenterProtocol {
     
     func dismiss() {
         router.dismiss()
+    }
+    
+    func navigateBack() {
+        router.navigateBack()
     }
 }

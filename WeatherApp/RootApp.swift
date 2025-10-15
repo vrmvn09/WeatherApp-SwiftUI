@@ -17,6 +17,8 @@ struct RootApp: App {
                 
         // Services
         container.apply(NavigationAssembly.self)
+        container.apply(NetworkAssembly.self)
+        container.apply(WeatherAPIAssembly.self)
         container.apply(ApplicationViewBuilder.self)
     
         // Modules
@@ -30,7 +32,7 @@ struct RootApp: App {
         WindowGroup {
             RootView(
                 navigationService: container.resolve(NavigationAssembly.self).build() as! NavigationService,
-                appViewBuilder: container.resolve(ApplicationViewBuilder.self)
+                applicationViewBuilder: container.resolve(ApplicationViewBuilder.self)
             )
         }
     }

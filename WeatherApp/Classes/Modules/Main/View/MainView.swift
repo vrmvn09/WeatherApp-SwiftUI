@@ -11,7 +11,6 @@ import CoreLocation
 
 struct MainView: View {
     @ObservedObject var viewState: MainViewState
-    let presenter: MainPresenterProtocol
     @State private var searchText = ""
     @State private var gradientShift: Double = 0.0
     @StateObject private var locationManager = LocationManager()
@@ -66,11 +65,11 @@ struct MainView: View {
                     // MARK: - Search Bar
                     // MARK: - Modern Search Bar
                     ModernSearchBar(text: $searchText) {
-                        viewState.presenter?.fetchWeatherFromText(searchText)
+                        viewState.fetchWeatherFromText(searchText)
                         searchText = ""
                     }
                     .onChange(of: searchText) { newValue in
-                        viewState.presenter?.updateSuggestions(for: newValue)
+                        viewState.updateSuggestions(for: newValue)
                     }
 
                     
@@ -98,14 +97,14 @@ struct MainView: View {
                                         Image(systemName: "minus.circle.fill")
                                             .foregroundColor(isMyLocation ? .gray : .red)
                                             .font(.system(size: 18, weight: .bold))
-                                            .onTapGesture { if !isMyLocation { viewState.presenter?.removeCity(city) } }
+                                            .onTapGesture { if !isMyLocation { viewState.removeCity(city) } }
                                     } else {
                                         Image(systemName: "chevron.right")
                                             .foregroundColor(.white.opacity(0.7))
                                     }
                                 }
                                 .contentShape(Rectangle())
-                                .onTapGesture { viewState.presenter?.selectCity(city) }
+                                .onTapGesture { viewState.selectCity(city) }
                                 .listRowBackground(
                                     RoundedRectangle(cornerRadius: 16)
                                         .fill(.ultraThinMaterial)
@@ -119,7 +118,7 @@ struct MainView: View {
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     if !isMyLocation {
                                         Button(role: .destructive) {
-                                            viewState.presenter?.removeCity(city)
+                                            viewState.removeCity(city)
                                         } label: {
                                             Label("Delete", systemImage: "trash")
                                         }
@@ -181,13 +180,13 @@ struct MainView: View {
                             suggestions: viewState.citySuggestions,
                             saved: viewState.savedCities,
                             onSelect: { location in
-                                viewState.presenter?.selectCity(location)
+                                viewState.selectCity(location)
                                 searchText = ""
                             },
                             onAdd: { location in
-                                viewState.presenter?.addCityToList(location)
+                                viewState.addCityToList(location)
                                 // hide suggestions after adding
-                                viewState.presenter?.updateSuggestions(for: "")
+                                viewState.updateSuggestions(for: "")
                                 searchText = ""
                             }
                         )
@@ -201,7 +200,7 @@ struct MainView: View {
                 }
                 }
                 .onAppear {
-                    viewState.presenter?.onAppear()
+                    viewState.onAppear()
                     // Prompt for location on launch to support iOS Weather behavior
                     locationManager.requestLocation()
                     shouldNavigateOnLocation = true
@@ -211,8 +210,8 @@ struct MainView: View {
                     guard let coords = coords, !didNavigateFromLocation else { return }
                     guard shouldNavigateOnLocation else { return }
                     didNavigateFromLocation = true
-                    viewState.presenter?.fetchWeatherForLocationAndNavigate(coords)
-                    viewState.presenter?.addCityToList(GeoLocation(name: "My Location", lat: coords.latitude, lon: coords.longitude, country: ""))
+                    viewState.fetchWeatherForLocationAndNavigate(coords)
+                    viewState.addCityToList(GeoLocation(name: "My Location", lat: coords.latitude, lon: coords.longitude, country: ""))
                     viewState.persistLastLocation(coords)
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
@@ -228,7 +227,7 @@ struct MainView: View {
                 .onReceive(NotificationCenter.default.publisher(for: .addCityFromDetail)) { output in
                     if let city = output.object as? GeoLocation {
                         print("📨 Received notification to add city: \(city.name)")
-                        viewState.presenter?.addCityToList(city)
+                        viewState.addCityToList(city)
                     } else {
                         print("❌ Failed to cast notification object to GeoLocation")
                     }

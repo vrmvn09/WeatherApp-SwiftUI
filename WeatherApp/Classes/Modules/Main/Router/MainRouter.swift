@@ -16,10 +16,22 @@ final class MainRouter: MainRouterProtocol {
     }
     
     func showWeatherDetail(for weather: WeatherEntity, city: GeoLocation?) {
-        if let nav = navigationService as? NavigationService {
-            // Создаем дефолтный город если city = nil
-            let cityToUse = city ?? GeoLocation(name: "Unknown", lat: 0.0, lon: 0.0, country: "Unknown")
-            nav.items.append(.Weather(weather: weather, city: cityToUse))
-        }
+        // Создаем дефолтный город если city = nil
+        let cityToUse = city ?? GeoLocation(name: "Unknown", lat: 0.0, lon: 0.0, country: "Unknown")
+        navigationService.items.append(.Weather(weather: weather, city: cityToUse))
+    }
+    
+    // MARK: - Additional Navigation Methods
+    func navigateToRoot() {
+        navigationService.items.removeAll()
+    }
+    
+    func showConfirmation(completed: (() -> Void)?) {
+        // navigationService.fullScreen = .Confirmation(completed: completed)
+        // Пока не реализовано, так как нет Confirmation модуля
+    }
+    
+    func showDeleteAlert(onConfirm: (() -> Void)?, onCancel: (() -> Void)?) {
+        navigationService.alert = .deleteConfirmation(yesAction: onConfirm, noAction: onCancel)
     }
 }

@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 // MARK: - WeatherDetailViewStateProtocol
-protocol WeatherDetailViewStateProtocol: ObservableObject {
+protocol WeatherDetailViewStateProtocol: ViewStateProtocol {
     var weather: WeatherEntity? { get }
     var city: GeoLocation? { get }
     var showAddButton: Bool { get }
@@ -44,14 +44,15 @@ protocol WeatherDetailViewStateProtocol: ObservableObject {
 }
 
 // MARK: - WeatherDetailPresenterProtocol
-protocol WeatherDetailPresenterProtocol: AnyObject {
+protocol WeatherDetailPresenterProtocol: PresenterProtocol {
     func onAppear()
     func addCityToList()
     func dismiss()
+    func navigateBack()
 }
 
 // MARK: - WeatherDetailInteractorProtocol
-protocol WeatherDetailInteractorProtocol: AnyObject {
+protocol WeatherDetailInteractorProtocol: InteractorProtocol {
     func setWeather(_ weather: WeatherEntity)
     func setCity(_ city: GeoLocation)
     func getWeather() -> WeatherEntity?
@@ -60,6 +61,10 @@ protocol WeatherDetailInteractorProtocol: AnyObject {
 }
 
 // MARK: - WeatherDetailRouterProtocol
-protocol WeatherDetailRouterProtocol: AnyObject {
+protocol WeatherDetailRouterProtocol: RouterProtocol {
     func dismiss()
+    func navigateBack()
+    func navigateToRoot()
+    func showNetworkErrorAlert(retryAction: (() -> Void)?)
+    func addCityToList(_ city: GeoLocation)
 }

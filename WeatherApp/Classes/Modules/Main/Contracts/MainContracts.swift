@@ -12,6 +12,9 @@ import CoreLocation
 // Router
 protocol MainRouterProtocol: RouterProtocol {
     func showWeatherDetail(for weather: WeatherEntity, city: GeoLocation?)
+    func navigateToRoot()
+    func showConfirmation(completed: (() -> Void)?)
+    func showDeleteAlert(onConfirm: (() -> Void)?, onCancel: (() -> Void)?)
 }
 
 // Presenter
