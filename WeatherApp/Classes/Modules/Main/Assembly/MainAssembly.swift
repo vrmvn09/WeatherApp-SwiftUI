@@ -14,6 +14,7 @@ final class MainAssembly: Assembly {
     func build() -> some View {
         
         let navigationService = container.resolve(NavigationAssembly.self).build()
+        let locationService = container.resolve(LocationAssembly.self).build()
 
         // Router
         let router = MainRouter(navigationService: navigationService)
@@ -23,7 +24,7 @@ final class MainAssembly: Assembly {
         let interactor = MainInteractor(weatherAPIService: weatherAPIService)
 
         //ViewState
-        let viewState =  MainViewState()
+        let viewState =  MainViewState(locationService: locationService)
 
         // Presenter
         let presenter = MainPresenter(router: router,

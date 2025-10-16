@@ -42,15 +42,12 @@ final class MainPresenter: MainPresenterProtocol {
             viewState?.updateCitySuggestions([])
             return
         }
-        print("🔍 Searching for city:", text)
         
         interactor.fetchCitySuggestions(for: text) { [weak self] result in
             switch result {
             case .success(let cities):
-                print("🏙️ Suggestions:", cities.map { $0.name })
                 self?.viewState?.updateCitySuggestions(cities)
             case .failure(let error):
-                print("❌ Fetch error:", error)
                 self?.viewState?.updateCitySuggestions([])
             }
         }
@@ -89,13 +86,16 @@ final class MainPresenter: MainPresenterProtocol {
         
         if city.name == "My Location" {
             if let idx = viewState.savedCities.firstIndex(where: { $0.name == "My Location" }) {
-                // update coordinates of existing My Location entry
-                print("🔄 Updating My Location coordinates")
-                var updatedCities = viewState.savedCities
-                updatedCities[idx] = city
-                viewState.updateSavedCities(updatedCities)
+                let existingLocation = viewState.savedCities[idx]
+                // Check if coordinates are significantly different
+                let distance = sqrt(pow(city.lat - existingLocation.lat, 2) + pow(city.lon - existingLocation.lon, 2))
+                
+                if distance > 0.000001 { // Only update if location changed significantly (more than ~10 centimeters)
+                    var updatedCities = viewState.savedCities
+                    updatedCities[idx] = city
+                    viewState.updateSavedCities(updatedCities)
+                }
             } else {
-                print("📍 Adding My Location to list")
                 var updatedCities = viewState.savedCities
                 updatedCities.insert(city, at: 0)
                 viewState.updateSavedCities(updatedCities)
@@ -104,11 +104,9 @@ final class MainPresenter: MainPresenterProtocol {
         }
         
         if viewState.savedCities.contains(city) {
-            print("⚠️ City \(city.name) already exists in list")
             return
         }
         
-        print("➕ Adding new city: \(city.name), \(city.country) to list")
         var updatedCities = viewState.savedCities
         updatedCities.append(city)
         viewState.updateSavedCities(updatedCities)
@@ -172,6 +170,35 @@ final class MainPresenter: MainPresenterProtocol {
                     viewState?.updateErrorMessage(error.localizedDescription)
                 }
             }
+        }
+    }
+    
+    // MARK: - Data Persistence Methods
+    func loadLastLocation() -> CLLocationCoordinate2D? {
+        return interactor.loadLastLocation()
+    }
+    
+    func persistLastLocation(_ coords: CLLocationCoordinate2D) {
+        // Check if coordinates are significantly different from last saved location
+        if let lastLocation = interactor.loadLastLocation() {
+            let distance = sqrt(pow(coords.latitude - lastLocation.latitude, 2) + pow(coords.longitude - lastLocation.longitude, 2))
+            // Only persist if location changed significantly (more than ~10 centimeters)
+            guard distance > 0.000001 else { 
+                return 
+            }
+        }
+        
+        interactor.persistLastLocation(coords)
+    }
+    
+    func saveSavedCities(_ cities: [GeoLocation]) {
+        interactor.saveSavedCities(cities)
+    }
+    
+    func loadSavedCities() {
+        let cities = interactor.loadSavedCities()
+        DispatchQueue.main.async {
+            self.viewState?.updateSavedCities(cities)
         }
     }
     

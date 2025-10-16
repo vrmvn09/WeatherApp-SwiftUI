@@ -26,10 +26,6 @@ final class NetworkService: NetworkServiceType {
             let decoded = try JSONDecoder().decode(T.self, from: data)
             return decoded
         } catch {
-            print("❌ Decode error:", error)
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("🔍 Raw JSON:", jsonString)
-            }
             throw error
         }
     }

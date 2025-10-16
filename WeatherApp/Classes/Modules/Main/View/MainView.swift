@@ -11,13 +11,6 @@ import CoreLocation
 
 struct MainView: View {
     @ObservedObject var viewState: MainViewState
-    @State private var searchText = ""
-    @State private var gradientShift: Double = 0.0
-    @StateObject private var locationManager = LocationManager()
-    @State private var keyboardHeight: CGFloat = 0
-    @State private var isEditing: Bool = false
-    @State private var didNavigateFromLocation = false
-    @State private var shouldNavigateOnLocation = true
     
     var body: some View {
         ZStack {
@@ -35,9 +28,12 @@ struct MainView: View {
                                 .shadow(color: .black.opacity(0.4), radius: 6, x: 0, y: 3)
                             Spacer()
                             Button(action: {
-                                // Only ask for permission; don't auto-navigate on this action
-                                shouldNavigateOnLocation = false
-                                locationManager.requestPermission()
+                                // Request location when user taps the button
+                                viewState.shouldNavigateOnLocation = true
+                                // Always request permission first, then location
+                                viewState.requestLocationPermission()
+                                // Also try to request location directly
+                                viewState.requestLocation()
                             }) {
                                 Image(systemName: "location.fill")
                                     .font(.system(size: 20, weight: .bold))
@@ -47,8 +43,8 @@ struct MainView: View {
                                     .clipShape(Circle())
                             }
                             .padding(.trailing, 8)
-                            Button(action: { withAnimation { isEditing.toggle() } }) {
-                                Image(systemName: isEditing ? "checkmark" : "ellipsis.circle")
+                            Button(action: { withAnimation { viewState.isEditing.toggle() } }) {
+                                Image(systemName: viewState.isEditing ? "checkmark" : "ellipsis.circle")
                                     .font(.system(size: 22, weight: .bold))
                                     .foregroundColor(.white)
                                     .padding(8)
@@ -64,11 +60,11 @@ struct MainView: View {
                     
                     // MARK: - Search Bar
                     // MARK: - Modern Search Bar
-                    ModernSearchBar(text: $searchText) {
-                        viewState.fetchWeatherFromText(searchText)
-                        searchText = ""
+                    ModernSearchBar(text: $viewState.searchText) {
+                        viewState.fetchWeatherFromText(viewState.searchText)
+                        viewState.searchText = ""
                     }
-                    .onChange(of: searchText) { newValue in
+                    .onChange(of: viewState.searchText) { newValue in
                         viewState.updateSuggestions(for: newValue)
                     }
 
@@ -93,7 +89,7 @@ struct MainView: View {
 
                                     Spacer()
 
-                                    if isEditing {
+                                    if viewState.isEditing {
                                         Image(systemName: "minus.circle.fill")
                                             .foregroundColor(isMyLocation ? .gray : .red)
                                             .font(.system(size: 18, weight: .bold))
@@ -181,55 +177,69 @@ struct MainView: View {
                             saved: viewState.savedCities,
                             onSelect: { location in
                                 viewState.selectCity(location)
-                                searchText = ""
+                                viewState.searchText = ""
                             },
                             onAdd: { location in
                                 viewState.addCityToList(location)
                                 // hide suggestions after adding
                                 viewState.updateSuggestions(for: "")
-                                searchText = ""
+                                viewState.searchText = ""
                             }
                         )
-                        .frame(maxHeight: keyboardHeight > 0 ? 200 : 300) // Limit height when keyboard is visible
+                        .frame(maxHeight: viewState.keyboardHeight > 0 ? 200 : 300) // Limit height when keyboard is visible
                         
                         Spacer()
                     }
-                    .padding(.bottom, keyboardHeight > 0 ? keyboardHeight - 100 : 0) // Adjust for keyboard
+                    .padding(.bottom, viewState.keyboardHeight > 0 ? viewState.keyboardHeight - 100 : 0) // Adjust for keyboard
                     .transition(.opacity)
                     .animation(.easeInOut, value: viewState.citySuggestions.isEmpty)
                 }
                 }
                 .onAppear {
                     viewState.onAppear()
-                    // Prompt for location on launch to support iOS Weather behavior
-                    locationManager.requestLocation()
-                    shouldNavigateOnLocation = true
+                    // Only request permission on launch, not location
+                    viewState.requestLocationPermission()
+                    viewState.shouldNavigateOnLocation = true
                 }
                 // On first location update, fetch and navigate + auto-add to list
-                .onReceive(locationManager.$location) { coords in
-                    guard let coords = coords, !didNavigateFromLocation else { return }
-                    guard shouldNavigateOnLocation else { return }
-                    didNavigateFromLocation = true
+                .onReceive(viewState.locationPublisher) { coords in
+                    guard let coords = coords else { 
+                        return 
+                    }
+                    guard viewState.shouldNavigateOnLocation else { 
+                        return 
+                    }
+                    guard !viewState.didNavigateFromLocation else { 
+                        return 
+                    }
+                    
+                    // Check if coordinates are significantly different from last saved location
+                    if let lastLocation = viewState.loadLastLocation() {
+                        let distance = sqrt(pow(coords.latitude - lastLocation.latitude, 2) + pow(coords.longitude - lastLocation.longitude, 2))
+                        // Only proceed if location changed significantly (more than ~10 centimeters)
+                        guard distance > 0.000001 else { 
+                            return 
+                        }
+                    }
+                    
+                    viewState.didNavigateFromLocation = true
                     viewState.fetchWeatherForLocationAndNavigate(coords)
                     viewState.addCityToList(GeoLocation(name: "My Location", lat: coords.latitude, lon: coords.longitude, country: ""))
                     viewState.persistLastLocation(coords)
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
                     if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
-                        keyboardHeight = keyboardFrame.height
+                        viewState.keyboardHeight = keyboardFrame.height
                     }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-                    keyboardHeight = 0
+                    viewState.keyboardHeight = 0
                 }
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar(.hidden, for: .navigationBar)
                 .onReceive(NotificationCenter.default.publisher(for: .addCityFromDetail)) { output in
                     if let city = output.object as? GeoLocation {
-                        print("📨 Received notification to add city: \(city.name)")
                         viewState.addCityToList(city)
-                    } else {
-                        print("❌ Failed to cast notification object to GeoLocation")
                     }
                 }
             }

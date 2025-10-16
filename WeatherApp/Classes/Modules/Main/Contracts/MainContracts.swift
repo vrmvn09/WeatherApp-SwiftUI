@@ -27,6 +27,12 @@ protocol MainPresenterProtocol: PresenterProtocol {
     func fetchWeatherFromText(_ text: String)
     func fetchWeather(for coordinates: CLLocationCoordinate2D)
     func fetchWeatherForLocationAndNavigate(_ coordinates: CLLocationCoordinate2D)
+    
+    // Data persistence methods
+    func loadLastLocation() -> CLLocationCoordinate2D?
+    func persistLastLocation(_ coords: CLLocationCoordinate2D)
+    func saveSavedCities(_ cities: [GeoLocation])
+    func loadSavedCities()
 }
 
 // Interactor
@@ -36,15 +42,33 @@ protocol MainInteractorProtocol: InteractorProtocol {
     func fetchWeather(for coordinates: CLLocationCoordinate2D) async throws -> WeatherEntity
     func fetchWeather(lat: Double, lon: Double) async throws -> WeatherEntity
     func fetchCitySuggestions(for query: String, completion: @escaping (Result<[GeoLocation], Error>) -> Void)
+    
+    // Data persistence methods
+    func loadLastLocation() -> CLLocationCoordinate2D?
+    func persistLastLocation(_ coords: CLLocationCoordinate2D)
+    func saveSavedCities(_ cities: [GeoLocation])
+    func loadSavedCities() -> [GeoLocation]
 }
 
 // ViewState
 protocol MainViewStateProtocol: ViewStateProtocol {
     var citySuggestions: [GeoLocation] { get }
+    var searchText: String { get set }
+    var gradientShift: Double { get set }
+    var keyboardHeight: CGFloat { get set }
+    var isEditing: Bool { get set }
+    var didNavigateFromLocation: Bool { get set }
+    var shouldNavigateOnLocation: Bool { get set }
+    
+    var locationPublisher: Published<CLLocationCoordinate2D?>.Publisher { get }
+    
     func set(with presenter: MainPresenterProtocol)
     func updateWeather(_ weather: WeatherEntity)
     func updateLoading(_ isLoading: Bool)
     func updateErrorMessage(_ message: String?)
     func updateCitySuggestions(_ suggestions: [GeoLocation])
     func updateSavedCities(_ cities: [GeoLocation])
+    
+    func requestLocationPermission()
+    func requestLocation()
 }

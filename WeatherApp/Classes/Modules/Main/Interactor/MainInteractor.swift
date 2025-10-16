@@ -11,6 +11,16 @@ import CoreLocation
 
 final class MainInteractor: MainInteractorProtocol {
     private let weatherAPIService: WeatherAPIServiceType
+    
+    // Storage keys
+    private let storageKey = "savedCities"
+    private let lastLocationKey = "lastLocation"
+    
+    // File URL for saved cities
+    private var savedCitiesFileURL: URL {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        return docs.appendingPathComponent("saved_cities.json")
+    }
 
     init(weatherAPIService: WeatherAPIServiceType) {
         self.weatherAPIService = weatherAPIService
@@ -20,13 +30,11 @@ final class MainInteractor: MainInteractorProtocol {
         Task {
             do {
                 let response = try await weatherAPIService.fetchCitySuggestions(for: query, limit: 5)
-                print("✅ Cities fetched:", response.map { $0.name })
 
                 await MainActor.run {
                     completion(.success(response))
                 }
             } catch {
-                print("❌ City fetch failed:", error)
                 await MainActor.run {
                     completion(.failure(error))
                 }
@@ -55,7 +63,45 @@ final class MainInteractor: MainInteractorProtocol {
     }
 }
 
-// MARK: Private
+// MARK: - Data Persistence
 extension MainInteractor {
     
+    func loadLastLocation() -> CLLocationCoordinate2D? {
+        guard let dict = UserDefaults.standard.dictionary(forKey: lastLocationKey) as? [String: Double],
+              let lat = dict["lat"], let lon = dict["lon"] else { return nil }
+        return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+    }
+    
+    func persistLastLocation(_ coords: CLLocationCoordinate2D) {
+        let dict: [String: Double] = ["lat": coords.latitude, "lon": coords.longitude]
+        UserDefaults.standard.set(dict, forKey: lastLocationKey)
+    }
+    
+    func saveSavedCities(_ cities: [GeoLocation]) {
+        do {
+            let data = try JSONEncoder().encode(cities)
+            UserDefaults.standard.set(data, forKey: storageKey)
+            // Also persist to file to survive edge cases/reinstalls
+            try? data.write(to: savedCitiesFileURL, options: .atomic)
+        } catch {
+            // Handle error silently
+        }
+    }
+    
+    func loadSavedCities() -> [GeoLocation] {
+        if let data = UserDefaults.standard.data(forKey: storageKey) {
+            do {
+                let cities = try JSONDecoder().decode([GeoLocation].self, from: data)
+                return cities
+            } catch {
+                // Handle error silently
+            }
+        }
+        // Fallback to file (e.g., after certain reinstall scenarios)
+        if let data = try? Data(contentsOf: savedCitiesFileURL),
+           let cities = try? JSONDecoder().decode([GeoLocation].self, from: data) {
+            return cities
+        }
+        return []
+    }
 }

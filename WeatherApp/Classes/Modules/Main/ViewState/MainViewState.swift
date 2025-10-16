@@ -44,17 +44,26 @@ final class MainViewState: ObservableObject, MainViewStateProtocol {
     @Published var errorMessage: String?
     @Published var citySuggestions: [GeoLocation] = []
     @Published var savedCities: [GeoLocation] = []
-
-    private let storageKey = "savedCities"
-    private let lastLocationKey = "lastLocation"
-    private var savedCitiesFileURL: URL {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        return docs.appendingPathComponent("saved_cities.json")
+    
+    // UI State
+    @Published var searchText = ""
+    @Published var gradientShift: Double = 0.0
+    @Published var keyboardHeight: CGFloat = 0
+    @Published var isEditing: Bool = false
+    @Published var didNavigateFromLocation = false
+    @Published var shouldNavigateOnLocation = true
+    
+    // Location Service
+    private let locationService: LocationServiceType
+    
+    init(locationService: LocationServiceType) {
+        self.locationService = locationService
     }
+
     
     func set(with presener: MainPresenterProtocol) {
         self.presenter = presener
-        loadSavedCities()
+        presenter?.loadSavedCities()
     }
     
     // Methods to update weather data
@@ -75,9 +84,8 @@ final class MainViewState: ObservableObject, MainViewStateProtocol {
     }
 
     func updateSavedCities(_ cities: [GeoLocation]) {
-        print("💾 Updating saved cities: \(cities.map { $0.name })")
         self.savedCities = cities
-        saveSavedCities()
+        presenter?.saveSavedCities(cities)
     }
     
     // MARK: - User Actions (delegate to presenter)
@@ -110,41 +118,23 @@ final class MainViewState: ObservableObject, MainViewStateProtocol {
     }
 
     func persistLastLocation(_ coords: CLLocationCoordinate2D) {
-        let dict: [String: Double] = ["lat": coords.latitude, "lon": coords.longitude]
-        UserDefaults.standard.set(dict, forKey: lastLocationKey)
+        presenter?.persistLastLocation(coords)
     }
     
     func loadLastLocation() -> CLLocationCoordinate2D? {
-        guard let dict = UserDefaults.standard.dictionary(forKey: lastLocationKey) as? [String: Double],
-              let lat = dict["lat"], let lon = dict["lon"] else { return nil }
-        return CLLocationCoordinate2D(latitude: lat, longitude: lon)
-    }
-
-    private func saveSavedCities() {
-        do {
-            let data = try JSONEncoder().encode(savedCities)
-            UserDefaults.standard.set(data, forKey: storageKey)
-            // Also persist to file to survive edge cases/reinstalls
-            try? data.write(to: savedCitiesFileURL, options: .atomic)
-        } catch {
-            print("Failed to save cities: \(error)")
-        }
+        return presenter?.loadLastLocation()
     }
     
-    private func loadSavedCities() {
-        if let data = UserDefaults.standard.data(forKey: storageKey) {
-            do {
-                let cities = try JSONDecoder().decode([GeoLocation].self, from: data)
-                self.savedCities = cities
-                return
-            } catch {
-                print("Failed to load cities from defaults: \(error)")
-            }
-        }
-        // Fallback to file (e.g., after certain reinstall scenarios)
-        if let data = try? Data(contentsOf: savedCitiesFileURL),
-           let cities = try? JSONDecoder().decode([GeoLocation].self, from: data) {
-            self.savedCities = cities
-        }
+    // MARK: - Location Service Methods
+    func requestLocationPermission() {
+        locationService.requestPermission()
+    }
+    
+    func requestLocation() {
+        locationService.requestLocation()
+    }
+    
+    var locationPublisher: Published<CLLocationCoordinate2D?>.Publisher {
+        locationService.locationPublisher
     }
 }

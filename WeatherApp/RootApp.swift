@@ -19,6 +19,7 @@ struct RootApp: App {
         container.apply(NavigationAssembly.self)
         container.apply(NetworkAssembly.self)
         container.apply(WeatherAPIAssembly.self)
+        container.apply(LocationAssembly.self)
         container.apply(ApplicationViewBuilder.self)
     
         // Modules
