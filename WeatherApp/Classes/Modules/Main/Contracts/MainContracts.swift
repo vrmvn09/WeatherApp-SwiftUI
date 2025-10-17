@@ -33,6 +33,15 @@ protocol MainPresenterProtocol: PresenterProtocol {
     func persistLastLocation(_ coords: CLLocationCoordinate2D)
     func saveSavedCities(_ cities: [GeoLocation])
     func loadSavedCities()
+    
+    // Location service methods
+    func requestLocationPermission()
+    func requestLocation()
+    func setLocationCallback(_ callback: @escaping (CLLocationCoordinate2D?) -> Void)
+    func setPermissionGrantedCallback(_ callback: @escaping () -> Void)
+    
+    // Navigation state management
+    func resetNavigationFlag()
 }
 
 // Interactor
@@ -48,6 +57,15 @@ protocol MainInteractorProtocol: InteractorProtocol {
     func persistLastLocation(_ coords: CLLocationCoordinate2D)
     func saveSavedCities(_ cities: [GeoLocation])
     func loadSavedCities() -> [GeoLocation]
+    
+    // Location service methods
+    func requestLocationPermission()
+    func requestLocation()
+    func setLocationCallback(_ callback: @escaping (CLLocationCoordinate2D?) -> Void)
+    func setPermissionGrantedCallback(_ callback: @escaping () -> Void)
+    
+    // Navigation state management
+    func resetNavigationFlag()
 }
 
 // ViewState
@@ -60,8 +78,6 @@ protocol MainViewStateProtocol: ViewStateProtocol {
     var didNavigateFromLocation: Bool { get set }
     var shouldNavigateOnLocation: Bool { get set }
     
-    var locationPublisher: Published<CLLocationCoordinate2D?>.Publisher { get }
-    
     func set(with presenter: MainPresenterProtocol)
     func updateWeather(_ weather: WeatherEntity)
     func updateLoading(_ isLoading: Bool)
@@ -71,4 +87,9 @@ protocol MainViewStateProtocol: ViewStateProtocol {
     
     func requestLocationPermission()
     func requestLocation()
+    func setLocationCallback(_ callback: @escaping (CLLocationCoordinate2D?) -> Void)
+    func setPermissionGrantedCallback(_ callback: @escaping () -> Void)
+    
+    // Navigation state management
+    func resetNavigationFlag()
 }

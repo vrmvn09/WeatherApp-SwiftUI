@@ -8,12 +8,12 @@
 
 import Foundation
 import CoreLocation
-import Combine
 
-protocol LocationServiceType: ObservableObject {
+protocol LocationServiceType {
     var location: CLLocationCoordinate2D? { get }
-    var locationPublisher: Published<CLLocationCoordinate2D?>.Publisher { get }
     
     func requestPermission()
     func requestLocation()
+    func setLocationCallback(_ callback: @escaping (CLLocationCoordinate2D?) -> Void)
+    func setPermissionGrantedCallback(_ callback: @escaping () -> Void)
 }

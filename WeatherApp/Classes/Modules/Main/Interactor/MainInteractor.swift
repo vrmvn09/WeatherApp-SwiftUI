@@ -11,6 +11,7 @@ import CoreLocation
 
 final class MainInteractor: MainInteractorProtocol {
     private let weatherAPIService: WeatherAPIServiceType
+    private let locationService: LocationServiceType
     
     // Storage keys
     private let storageKey = "savedCities"
@@ -22,8 +23,9 @@ final class MainInteractor: MainInteractorProtocol {
         return docs.appendingPathComponent("saved_cities.json")
     }
 
-    init(weatherAPIService: WeatherAPIServiceType) {
+    init(weatherAPIService: WeatherAPIServiceType, locationService: LocationServiceType) {
         self.weatherAPIService = weatherAPIService
+        self.locationService = locationService
     }
 
     func fetchCitySuggestions(for query: String, completion: @escaping (Result<[GeoLocation], Error>) -> Void) {
@@ -103,5 +105,28 @@ extension MainInteractor {
             return cities
         }
         return []
+    }
+    
+    // MARK: - Location Service Methods
+    func requestLocationPermission() {
+        locationService.requestPermission()
+    }
+    
+    func requestLocation() {
+        locationService.requestLocation()
+    }
+    
+    func setLocationCallback(_ callback: @escaping (CLLocationCoordinate2D?) -> Void) {
+        locationService.setLocationCallback(callback)
+    }
+    
+    func setPermissionGrantedCallback(_ callback: @escaping () -> Void) {
+        locationService.setPermissionGrantedCallback(callback)
+    }
+    
+    // MARK: - Navigation State Management
+    func resetNavigationFlag() {
+        // This method is not needed in Interactor as it's handled in ViewState
+        // But we need to implement it to conform to protocol
     }
 }

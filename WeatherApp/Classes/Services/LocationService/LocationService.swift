@@ -8,16 +8,13 @@
 
 import Foundation
 import CoreLocation
-import Combine
 
 final class LocationService: NSObject, LocationServiceType {
-    @Published var location: CLLocationCoordinate2D?
-    
-    var locationPublisher: Published<CLLocationCoordinate2D?>.Publisher {
-        $location
-    }
-    
     private let locationManager = CLLocationManager()
+    private var locationCallback: ((CLLocationCoordinate2D?) -> Void)?
+    private var permissionGrantedCallback: (() -> Void)?
+    
+    var location: CLLocationCoordinate2D?
     
     override init() {
         super.init()
@@ -47,6 +44,14 @@ final class LocationService: NSObject, LocationServiceType {
         
         locationManager.requestLocation()
     }
+    
+    func setLocationCallback(_ callback: @escaping (CLLocationCoordinate2D?) -> Void) {
+        self.locationCallback = callback
+    }
+    
+    func setPermissionGrantedCallback(_ callback: @escaping () -> Void) {
+        self.permissionGrantedCallback = callback
+    }
 }
 
 // MARK: - CLLocationManagerDelegate
@@ -54,6 +59,7 @@ extension LocationService: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         self.location = location.coordinate
+        locationCallback?(location.coordinate)
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
@@ -85,11 +91,13 @@ extension LocationService: CLLocationManagerDelegate {
                 break
             }
         }
+        locationCallback?(nil)
     }
     
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:
+            permissionGrantedCallback?()
             requestLocation()
         case .denied:
             break

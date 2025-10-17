@@ -21,10 +21,10 @@ final class MainAssembly: Assembly {
 
         // Interactor
         let weatherAPIService = container.resolve(WeatherAPIAssembly.self).build()
-        let interactor = MainInteractor(weatherAPIService: weatherAPIService)
+        let interactor = MainInteractor(weatherAPIService: weatherAPIService, locationService: locationService)
 
         //ViewState
-        let viewState =  MainViewState(locationService: locationService)
+        let viewState = MainViewState()
 
         // Presenter
         let presenter = MainPresenter(router: router,

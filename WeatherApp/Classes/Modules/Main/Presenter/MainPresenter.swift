@@ -202,5 +202,28 @@ final class MainPresenter: MainPresenterProtocol {
         }
     }
     
+    // MARK: - Location Service Methods
+    func requestLocationPermission() {
+        interactor.requestLocationPermission()
+    }
+    
+    func requestLocation() {
+        interactor.requestLocation()
+    }
+    
+    func setLocationCallback(_ callback: @escaping (CLLocationCoordinate2D?) -> Void) {
+        interactor.setLocationCallback(callback)
+    }
+    
+    func setPermissionGrantedCallback(_ callback: @escaping () -> Void) {
+        interactor.setPermissionGrantedCallback(callback)
+    }
+    
+    // MARK: - Navigation State Management
+    func resetNavigationFlag() {
+        if let viewState = viewState as? MainViewState {
+            viewState.resetNavigationFlag()
+        }
+    }
 }
 

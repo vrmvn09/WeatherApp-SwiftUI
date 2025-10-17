@@ -29,6 +29,7 @@ struct MainView: View {
                             Spacer()
                             Button(action: {
                                 // Request location when user taps the button
+                                viewState.resetNavigationFlag()
                                 viewState.shouldNavigateOnLocation = true
                                 // Always request permission first, then location
                                 viewState.requestLocationPermission()
@@ -201,8 +202,9 @@ struct MainView: View {
                     viewState.requestLocationPermission()
                     viewState.shouldNavigateOnLocation = true
                 }
-                // On first location update, fetch and navigate + auto-add to list
-                .onReceive(viewState.locationPublisher) { coords in
+                .onAppear {
+                    // Set up location callback only once
+                    viewState.setLocationCallback { coords in
                     guard let coords = coords else { 
                         return 
                     }
@@ -226,6 +228,18 @@ struct MainView: View {
                     viewState.fetchWeatherForLocationAndNavigate(coords)
                     viewState.addCityToList(GeoLocation(name: "My Location", lat: coords.latitude, lon: coords.longitude, country: ""))
                     viewState.persistLastLocation(coords)
+                    }
+                }
+                
+                // Set up permission granted callback only once
+                .onAppear {
+                    // Only set up the callback if we haven't set it yet
+                    if !viewState.hasSetPermissionCallback {
+                        viewState.hasSetPermissionCallback = true
+                        viewState.setPermissionGrantedCallback {
+                            viewState.resetNavigationFlag()
+                        }
+                    }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
                     if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {

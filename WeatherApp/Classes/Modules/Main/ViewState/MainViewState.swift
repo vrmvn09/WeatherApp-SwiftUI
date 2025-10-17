@@ -50,14 +50,22 @@ final class MainViewState: ObservableObject, MainViewStateProtocol {
     @Published var gradientShift: Double = 0.0
     @Published var keyboardHeight: CGFloat = 0
     @Published var isEditing: Bool = false
-    @Published var didNavigateFromLocation = false
+    @Published var didNavigateFromLocation = false {
+        didSet {
+            UserDefaults.standard.set(didNavigateFromLocation, forKey: "didNavigateFromLocation")
+        }
+    }
     @Published var shouldNavigateOnLocation = true
+    @Published var hasSetPermissionCallback = false {
+        didSet {
+            UserDefaults.standard.set(hasSetPermissionCallback, forKey: "hasSetPermissionCallback")
+        }
+    }
     
-    // Location Service
-    private let locationService: LocationServiceType
-    
-    init(locationService: LocationServiceType) {
-        self.locationService = locationService
+    init() {
+        // Load saved navigation state
+        self.didNavigateFromLocation = UserDefaults.standard.bool(forKey: "didNavigateFromLocation")
+        self.hasSetPermissionCallback = UserDefaults.standard.bool(forKey: "hasSetPermissionCallback")
     }
 
     
@@ -127,14 +135,23 @@ final class MainViewState: ObservableObject, MainViewStateProtocol {
     
     // MARK: - Location Service Methods
     func requestLocationPermission() {
-        locationService.requestPermission()
+        presenter?.requestLocationPermission()
     }
     
     func requestLocation() {
-        locationService.requestLocation()
+        presenter?.requestLocation()
     }
     
-    var locationPublisher: Published<CLLocationCoordinate2D?>.Publisher {
-        locationService.locationPublisher
+    func setLocationCallback(_ callback: @escaping (CLLocationCoordinate2D?) -> Void) {
+        presenter?.setLocationCallback(callback)
+    }
+    
+    func setPermissionGrantedCallback(_ callback: @escaping () -> Void) {
+        presenter?.setPermissionGrantedCallback(callback)
+    }
+    
+    // MARK: - Navigation State Management
+    func resetNavigationFlag() {
+        didNavigateFromLocation = false
     }
 }
