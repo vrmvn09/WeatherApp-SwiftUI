@@ -219,6 +219,26 @@ final class MainPresenter: MainPresenterProtocol {
         interactor.setPermissionGrantedCallback(callback)
     }
     
+    // MARK: - Location Callback Handling
+    func handleLocationUpdate(_ coords: CLLocationCoordinate2D) {
+        guard let viewState = viewState as? MainViewState else { return }
+        
+        guard viewState.shouldNavigateOnLocation else { return }
+        guard !viewState.didNavigateFromLocation else { return }
+        
+        // Check if coordinates are significantly different from last saved location
+        if let lastLocation = interactor.loadLastLocation() {
+            let distance = sqrt(pow(coords.latitude - lastLocation.latitude, 2) + pow(coords.longitude - lastLocation.longitude, 2))
+            // Only proceed if location changed significantly (more than ~10 centimeters)
+            guard distance > 0.000001 else { return }
+        }
+        
+        viewState.didNavigateFromLocation = true
+        fetchWeatherForLocationAndNavigate(coords)
+        addCityToList(GeoLocation(name: "My Location", lat: coords.latitude, lon: coords.longitude, country: ""))
+        interactor.persistLastLocation(coords)
+    }
+    
     // MARK: - Navigation State Management
     func resetNavigationFlag() {
         if let viewState = viewState as? MainViewState {

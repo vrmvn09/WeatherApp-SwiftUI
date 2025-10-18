@@ -42,6 +42,7 @@ protocol MainPresenterProtocol: PresenterProtocol {
     
     // Navigation state management
     func resetNavigationFlag()
+    func handleLocationUpdate(_ coords: CLLocationCoordinate2D)
 }
 
 // Interactor

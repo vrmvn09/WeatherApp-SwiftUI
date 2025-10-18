@@ -150,6 +150,10 @@ final class MainViewState: ObservableObject, MainViewStateProtocol {
         presenter?.setPermissionGrantedCallback(callback)
     }
     
+    func handleLocationUpdate(_ coords: CLLocationCoordinate2D) {
+        presenter?.handleLocationUpdate(coords)
+    }
+    
     // MARK: - Navigation State Management
     func resetNavigationFlag() {
         didNavigateFromLocation = false

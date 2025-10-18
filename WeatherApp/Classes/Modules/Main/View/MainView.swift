@@ -205,29 +205,8 @@ struct MainView: View {
                 .onAppear {
                     // Set up location callback only once
                     viewState.setLocationCallback { coords in
-                    guard let coords = coords else { 
-                        return 
-                    }
-                    guard viewState.shouldNavigateOnLocation else { 
-                        return 
-                    }
-                    guard !viewState.didNavigateFromLocation else { 
-                        return 
-                    }
-                    
-                    // Check if coordinates are significantly different from last saved location
-                    if let lastLocation = viewState.loadLastLocation() {
-                        let distance = sqrt(pow(coords.latitude - lastLocation.latitude, 2) + pow(coords.longitude - lastLocation.longitude, 2))
-                        // Only proceed if location changed significantly (more than ~10 centimeters)
-                        guard distance > 0.000001 else { 
-                            return 
-                        }
-                    }
-                    
-                    viewState.didNavigateFromLocation = true
-                    viewState.fetchWeatherForLocationAndNavigate(coords)
-                    viewState.addCityToList(GeoLocation(name: "My Location", lat: coords.latitude, lon: coords.longitude, country: ""))
-                    viewState.persistLastLocation(coords)
+                        guard let coords = coords else { return }
+                        viewState.handleLocationUpdate(coords)
                     }
                 }
                 
